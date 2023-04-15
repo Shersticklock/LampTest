@@ -2,4 +2,4 @@
 
 Установка
 
-pip install -i https://test.pypi.org/simple/ example-package-lamp
+pip3 install -i https://test.pypi.org/simple/ example-package-lamp==0.0.4
