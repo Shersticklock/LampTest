@@ -18,6 +18,8 @@ commands = (
 )
 
 
+__all__ = ["start"]
+
 class Lamp:
     @classmethod
     def dispatch(cls, command, **kwargs):
@@ -32,12 +34,12 @@ class Lamp:
         function(**kwargs)
 
     @classmethod
-    def turn_on(cls):
+    def turn_on(cls, **kwargs):
         '''Включить фонарь.'''
         print('Фонарь включен')
 
     @classmethod
-    def turn_off(cls):
+    def turn_off(cls, **kwargs):
         '''Выключить фонарь.'''
         print('Фонарь выключен')
 
@@ -46,36 +48,36 @@ class Lamp:
         '''Изменить цвет фонаря.'''
         print(f'Фонарь стал цвета {metadata}')
 
-async def fetch(client):
-    async with client.get(f'http://{HOST}:{PORT}') as resp:
+async def fetch(client, host, port):
+    async with client.get(f'http://{host}:{port}') as resp:
         assert resp.status == 200
         return await resp.json()
 
 
-async def main():
+async def main(host=HOST, port=PORT, timeout=TIMEOUT):
     conn = aiohttp.TCPConnector()
-    timeout = aiohttp.ClientTimeout(total=TIMEOUT)
+    timeout = aiohttp.ClientTimeout(total=timeout)
     try:
         async with aiohttp.ClientSession(
                 timeout=timeout,
                 connector=conn
         ) as client:
-            command_json = await fetch(client)
+            command_json = await fetch(client, host, port)
             command = command_json['command']
             metadata = command_json['metadata']
 
             if command in commands:
                 Lamp.dispatch(command, metadata=metadata)
 
-    except aiohttp.client_exceptions.ClientConnectorError as error:
+    except Exception as error:
         print(error)
 
 
-if __name__ == '__main__':
+def start(host=HOST, port=PORT, timeout=TIMEOUT):
     loop = asyncio.get_event_loop()
     try:
-        loop.run_until_complete(main())
+        loop.run_until_complete(main(host=host, port=port, timeout=timeout))
     except asyncio.TimeoutError:
         print("ERROR: TIMEOUT")
-    finally:
-        loop.close()
+    except Exception as e:
+        print(e)
